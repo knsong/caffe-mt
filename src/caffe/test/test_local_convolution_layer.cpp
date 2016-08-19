@@ -61,8 +61,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 	int w_step = in->channels() * weights[0]->height() * weights[0]->width() / groups;
 	int w_spatial_dim = weights[0]->height() * weights[0]->width();
 	Dtype* out_data = out->mutable_cpu_data();
-    //LOG(INFO) << "caffe conv out shape:" << out->shape_string();
-	//LOG(INFO) << "out_h/w: " << out->height() << " " << out->width() << "in_h/w: " << in->height() << " " << in->width();
+	//LOG(INFO) << "caffe conv out shape:" << out->shape_string();
+	
 	for (int n = 0; n < out->num(); n++) {
 		for (int g = 0; g < groups; g++) {
 			o_head = o_g * g;
@@ -78,17 +78,12 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 									int w_idx = (o + o_head)* w_step +  w_spatial_dim * k + p * kernel_w + q;
 									if (in_y >= 0 && in_y < in->height()
 										&& in_x >= 0 && in_x < in->width()) {
-									//	LOG(INFO) << "o,o_head: " << o << " " << o_head;
-                                    //    std::cout << "o_c, o_h, o_w:" << o+o_head << " " << y << " " << x;
-                                    //    std::cout << " k_h, k_w:" << p << " " << q << std::endl;
-                                    //    std::cout << "in_data: " << in_data[in->offset(n, k + k_head, in_y, in_x)] << " w_data:" << weight_data[w_idx] << std::endl;
 										out_data[out->offset(n, o + o_head, y, x)] +=
 											in_data[in->offset(n, k + k_head, in_y, in_x)]
 											* weight_data[w_idx];
 									}
 								}
 							}
-                        //    std::cout << "o:" << out->offset(n, o+o_head,y,x) << " val:" << out_data[out->offset(n, o + o_head, y, x)] << std::endl;
 						}
 					}
 				}
@@ -132,8 +127,10 @@ void init_local_offset(Blob<Dtype> *idx_to_off_blob, int height, int width, int 
 			(idx_to_off_data + idx_to_off->offset(local_region_num_h - 1 - h, w))[0] = symmetry_offset_h;
 			(idx_to_off_data + idx_to_off->offset(local_region_num_h - 1 - h, w))[1] = offset_w;
 
-			(idx_to_off_data + idx_to_off->offset(local_region_num_h - 1 - h, local_region_num_w - 1 - w))[0] = symmetry_offset_h;
-			(idx_to_off_data + idx_to_off->offset(local_region_num_h - 1 - h, local_region_num_w - 1 - w))[1] = symmetry_offset_w;
+			(idx_to_off_data + idx_to_off->offset(local_region_num_h - 1 - h, local_region_num_w - 1 - w))[0]
+				= symmetry_offset_h;
+			(idx_to_off_data + idx_to_off->offset(local_region_num_h - 1 - h, local_region_num_w - 1 - w))[1]
+				= symmetry_offset_w;
 
 		}
 		if (local_region_num_w % 2){
@@ -170,13 +167,11 @@ void init_local_offset(Blob<Dtype> *idx_to_off_blob, int height, int width, int 
 template<typename Dtype>
 void crop_loc_patch_cpu(const Dtype *src, int src_w, int src_h, int src_c, int crop_width, int crop_height, int w_off, int h_off, Dtype *local_patch_data)
 {
-	for (int c = 0; c < src_c; ++c)
-	{
-		for (int h = 0; h < crop_height; ++h)
-		{
-			for (int w = 0; w < crop_width; ++w)
-			{
-				local_patch_data[(c * crop_height + h) * crop_width + w] = src[(c * src_h + (h + h_off)) * src_w + w + w_off];
+	for (int c = 0; c < src_c; ++c){
+		for (int h = 0; h < crop_height; ++h){
+			for (int w = 0; w < crop_width; ++w){
+				local_patch_data[(c * crop_height + h) * crop_width + w]
+					= src[(c * src_h + (h + h_off)) * src_w + w + w_off];
 			}
 		}
 	}
@@ -184,7 +179,7 @@ void crop_loc_patch_cpu(const Dtype *src, int src_w, int src_h, int src_c, int c
 
 template <typename Dtype>
 void realign_loc_conv_result_cpu(const vector<shared_ptr<Blob<Dtype> > > &local_conv_res, int loc_num_h, int loc_num_w
-												, int top_height, int top_width, Dtype *dst_data)
+	, int top_height, int top_width, Dtype *dst_data)
 {
 //	CHECK_EQ(local_conv_res[0]->channels(), dst_blob->channels()) << " channels mismatch!";
 
@@ -287,13 +282,6 @@ void caffe_loc_conv(const Blob<Dtype>* in, LocalConvolutionParameter* loc_conv_p
 	int loc_conv_out_h = (loc_region_h + 2 * pad_h - kernel_h) / stride_h + 1;
 	int loc_conv_out_w = (loc_region_w + 2 * pad_w - kernel_w) / stride_w + 1;
 
-#ifdef SHOW_LOG 
-	LOG(INFO) << "kernel_h/w:" << kernel_h << " " << kernel_w << " " << height << " " << width;
-	LOG(INFO) << "loc_h/w:" << loc_region_h << " " << loc_region_w << " nh/nw:" << loc_num_h << " " << loc_num_w;
-	LOG(INFO) << "in_n/c/h/w:" << num << " " << channels << " " << height << " " << width;
-	LOG(INFO) << "loc_o_c/h/w:" << conv_out_num << " " << loc_conv_out_h << " " << loc_conv_out_w;
-#endif
-
 	const Dtype *in_data = in->cpu_data();
 	vector<shared_ptr<Blob<Dtype> > > loc_weights;
 	loc_weights.resize(2);
@@ -315,31 +303,12 @@ void caffe_loc_conv(const Blob<Dtype>* in, LocalConvolutionParameter* loc_conv_p
 	Dtype *idx_to_off_data = idx_to_off.mutable_cpu_data();
 
 	init_local_offset(&idx_to_off, height, width, loc_region_h, loc_region_w, loc_num_h, loc_num_w, loc_step_h, loc_step_w);
-	/*	
-	for(int i = 0; i < loc_num_h; i++){
-		for(int j = 0; j < loc_num_w; j++){
-			LOG(INFO) << "ref_idx_to_off:h/w " << (ref_idx_off + weights[2]->offset(i, j))[0] << " " << (ref_idx_off + weights[2]->offset(i, j))[1];
-			LOG(INFO) << "idx_to_off:h/w " << (idx_to_off_data + idx_to_off.offset(i, j))[0] << " " << (idx_to_off_data + idx_to_off.offset(i, j))[1];
-			CHECK_LE(abs(idx_to_off_data[i*loc_num_w+j] - ref_idx_off[i*loc_num_w+j]), 0.0001);
-		}
-	}*/
+
 //	LOG(INFO) << "weight shape:" << weights[0]->shape_string() << " bias shape:" << weights[1]->shape_string(); 
 	Dtype *weights_data = weights[0]->mutable_cpu_data();
 	Dtype *bias_data = weights[1]->mutable_cpu_data();
 	
     for (int n = 0; n < num; n++){
-#ifdef SHOW_LOG
-	LOG(INFO) << "in:\n";
-	for(int i = 0; i < in->channels(); i++){
-        std::cout << "channel: " << i << std::endl;
-		for(int j = 0; j < in->height(); j++){
-			for(int k = 0; k < in->width(); k++){
-                std::cout << in_data[in->offset(n,i,j,k)] << " ";
-			}
-            std::cout << std::endl;
-		}
-	}
-#endif
 		const Dtype *single_in_data = in_data + in->offset(n);
 		Dtype *single_out_data = out_data + out->offset(n);
 		for (int h = 0; h < loc_num_h; h++){
@@ -347,64 +316,15 @@ void caffe_loc_conv(const Blob<Dtype>* in, LocalConvolutionParameter* loc_conv_p
 				int loc_num = h * loc_num_w + w;
 				Blob<Dtype> *loc_out_blob = loc_out[loc_num].get();
 				Dtype *loc_out_data = loc_out_blob->mutable_cpu_data();
-                memset(loc_out_data, 0, sizeof(Dtype) * loc_out_blob->count());
-                loc_weights[0]->set_cpu_data(weights_data + weights[0]->offset(loc_num));
+		                memset(loc_out_data, 0, sizeof(Dtype) * loc_out_blob->count());
+		                loc_weights[0]->set_cpu_data(weights_data + weights[0]->offset(loc_num));
 				loc_weights[1]->set_cpu_data(bias_data + weights[1]->offset(loc_num));
 				crop_loc_patch_cpu(single_in_data, width, height, channels
-											, loc_region_w, loc_region_h
-											, (idx_to_off_data + idx_to_off.offset(h, w))[1]
-											, (idx_to_off_data + idx_to_off.offset(h, w))[0], loc_in_data);
-#ifdef SHOW_LOG
-                std::cout << "n/lh/lw:" << n << " " << h << " " << w << std::endl;
-                std::cout << "loc_in\n";
-				for(int i = 0; i < channels; ++i ){
-                    std::cout <<"channel: " << i <<"\n";
-					for(int j = 0; j < loc_region_h; ++j){
-						for(int k = 0; k < loc_region_w; ++k){
-                            std::cout << loc_in_data[(i * loc_region_h + j)*loc_region_w + k] << " ";
-						}
-                        std::cout << std::endl;
-					}
-				}
-                std::cout <<"weights\n";
-				int w_oc_step = channels * kernel_h * kernel_w / groups;
-				Dtype *w_data = weights_data + weights[0]->offset(loc_num);
-				for(int i = 0; i < conv_out_num; i++ ){
-                    std::cout << "conv_out c: " << i << std::endl;
-					for(int j = 0; j < channels/groups; j++){
-                        std::cout << "conv_in c: " << j << std::endl;
-						for(int k = 0; k < kernel_h; k++){
-							for(int l = 0; l < kernel_w; l++){
-								int w_idx = i * w_oc_step + j * kernel_w * kernel_h + k * kernel_w + l;
-                                std::cout << w_data[w_idx] << " ";
-							}
-                            std::cout << std::endl;
-						}
-					}
-				}
-				
-                std::cout <<"bias\n";
-				Dtype *b_data = bias_data + weights[1]->offset(loc_num);
-				for(int i = 0; i < conv_out_num; i++ ){
-                        std::cout << b_data[i] << " ";
-				}
-                std::cout << std::endl;
-#endif
+					, loc_region_w, loc_region_h
+					, (idx_to_off_data + idx_to_off.offset(h, w))[1]
+					, (idx_to_off_data + idx_to_off.offset(h, w))[0], loc_in_data);
+
 				caffe_conv(&loc_in, &conv_param, loc_weights, loc_out_blob);
-#ifdef SHOW_LOG
-				std::cout <<"conv res\n";
-				const Dtype *o_data = loc_out_blob->cpu_data();
-				for(int i = 0; i < conv_out_num; i++ ){
-                    std::cout << "conv_out c: " << i << "\n";
-					for(int j = 0; j < loc_conv_out_h; j++){
-						for(int k = 0; k < loc_conv_out_w; k++){
-							int o_idx = i * loc_conv_out_h * loc_conv_out_w + j * loc_conv_out_w + k;
-                            std::cout << o_data[o_idx] << " ";
-                        }	
-                        std::cout << std::endl;
-					}
-				}
-#endif
 			}
 		}
 		realign_loc_conv_result_cpu(loc_out, loc_num_h, loc_num_w, out_height, out_width, single_out_data);
@@ -557,7 +477,6 @@ TYPED_TEST(LocalConvolutionLayerTest, TestLocalConvolution) {
  // LOG(INFO) << "top shape:" << this->blob_top_->shape_string();
   ref_top_data = this->ref_blob_top_->cpu_data();
   for (int i = 0; i < this->blob_top_->count(); ++i) {
- //    std::cout << "top, ref_top: " << top_data[i] << " " << ref_top_data[i] << std::endl;
      EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4) << "i " << i;
 }
 
