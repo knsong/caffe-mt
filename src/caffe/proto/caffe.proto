@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 149 (last added: local_conv_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -362,6 +362,7 @@ message LayerParameter {
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
   optional BiasParameter bias_param = 141;
+  optional BNParameter bn_param = 147;
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
@@ -381,6 +382,7 @@ message LayerParameter {
   optional InfogainLossParameter infogain_loss_param = 116;
   optional InnerProductParameter inner_product_param = 117;
   optional InputParameter input_param = 143;
+  optional LocalConvolutionParameter local_conv_param = 148;
   optional LogParameter log_param = 134;
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
@@ -403,6 +405,58 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+}
+
+// Message that stores parameters used by BNLayer
+message BNParameter {
+  optional FillerParameter scale_filler = 1; // The filler for the scale
+  optional FillerParameter shift_filler = 2; // The filler for the shift
+  optional int32 average_span = 3 [default = 10];	//The span of moving average for test phase
+  optional float exponential_average_weight = 4 [default = 0.001];	//The degree of average weighting decrease
+    enum Type{
+	CHANNEL_WISE = 0;
+	ELEMENT_WISE = 1;
+  }
+  optional Type bn_type = 5 [default = CHANNEL_WISE]; //The manner to perform BN 
+}
+
+//Only for 2D convolution till now
+message LocalConvolutionParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  optional bool bias_term = 2 [default = true]; // whether to have bias terms
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pad = 3 [default = 0]; // The padding size (equal in Y, X)
+  optional uint32 pad_h = 9 [default = 0]; // The padding height
+  optional uint32 pad_w = 10 [default = 0]; // The padding width
+  optional uint32 kernel_size = 4; // The kernel size (square)
+  optional uint32 kernel_h = 11; // The kernel height
+  optional uint32 kernel_w = 12; // The kernel width
+  optional uint32 group = 5 [default = 1]; // The group size for group conv
+  optional uint32 stride = 6 [default = 1]; // The stride (equal in Y, X)
+  optional uint32 stride_h = 13; // The stride height
+  optional uint32 stride_w = 14; // The stride width
+  repeated uint32 dilation = 25; // The dilation; defaults to 1
+  optional FillerParameter weight_filler = 7; // The filler for the weight
+  optional FillerParameter bias_filler = 8; // The filler for the bias
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 15 [default = DEFAULT];
+  
+  optional uint32 local_region_number = 16 [default = 1]; 		// If default, it will degrade to normal convlution
+  optional uint32 local_region_number_w = 17 [default = 1]; 	//, otherwise local_region_number * local_region_number local regions will 
+  optional uint32 local_region_number_h = 18 [default = 1]; 	// be convolved with different convolution kernel banks.
+
+  optional float local_region_ratio = 19 [default = 1.0]; 		// range in (0, 1], combined with local region number to determine the local region size
+  optional float local_region_ratio_w = 20 [default = 1.0]; 
+  optional float local_region_ratio_h = 21 [default = 1.0]; 
+  
+  optional uint32 local_region_step = 22 [default = 1]; 	//step between adjacent input local regions
+  optional uint32 local_region_step_w = 23 [default = 1]; 
+  optional uint32 local_region_step_h = 24 [default = 1]; 	
 }
 
 // Message that stores parameters used to apply transformation
