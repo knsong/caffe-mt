@@ -1,6 +1,6 @@
 
 
-#Hightlights here:
+#Hightlights of this repository:
 
 - 1. More manners of Batch Normalization compared with [official Caffe](https://github.com/BVLC/caffe);
 - 2. Local Convolution;
