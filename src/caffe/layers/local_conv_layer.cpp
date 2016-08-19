@@ -28,14 +28,14 @@ void LocalConvolutionLayer<Dtype>::init_local_offset(){
 	int h, w, offset_h, offset_w, symmetry_offset_h, symmetry_offset_w;
 	Blob<int> &idx_to_off = this->loc_idx_to_offset_;
 	int *idx_to_off_data = idx_to_off.mutable_cpu_data();
-    int loc_h = this->conv_input_shape_.cpu_data()[1];
-    int loc_w = this->conv_input_shape_.cpu_data()[2];
+	int loc_h = this->conv_input_shape_.cpu_data()[1];
+	int loc_w = this->conv_input_shape_.cpu_data()[2];
 	for (h = 0; h < this->local_region_num_h_ / 2; ++h){
 		offset_h = h * this->local_region_step_h_;
-        symmetry_offset_h = this->bottom_height_ - (offset_h + loc_h);
+		symmetry_offset_h = this->bottom_height_ - (offset_h + loc_h);
 		for (w = 0; w < this->local_region_num_w_ / 2; ++w){
 			offset_w = w * this->local_region_step_w_;
-            symmetry_offset_w = this->bottom_width_ - (offset_w + loc_w);
+            		symmetry_offset_w = this->bottom_width_ - (offset_w + loc_w);
 			idx_to_off_data[idx_to_off.offset(h, w, 0, 0)] = offset_h;
 			idx_to_off_data[idx_to_off.offset(h, w, 1, 0)] = offset_w;
 
@@ -45,12 +45,14 @@ void LocalConvolutionLayer<Dtype>::init_local_offset(){
 			idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, w, 0, 0)] = symmetry_offset_h;
 			idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, w, 1, 0)] = offset_w;
 
-			idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, this->local_region_num_w_ - 1 - w, 0, 0)] = symmetry_offset_h;
-			idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, this->local_region_num_w_ - 1 - w, 1, 0)] = symmetry_offset_w;
+			idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, this->local_region_num_w_ - 1 - w, 0, 0)]
+				= symmetry_offset_h;
+			idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, this->local_region_num_w_ - 1 - w, 1, 0)]
+				= symmetry_offset_w;
 
 		}
 		if (local_region_num_w_ % 2){
-            offset_w = (this->bottom_width_ - loc_w) / 2;
+            		offset_w = (this->bottom_width_ - loc_w) / 2;
 
 			idx_to_off_data[idx_to_off.offset(h, w, 0, 0)] = offset_h;
 			idx_to_off_data[idx_to_off.offset(h, w, 1, 0)] = offset_w;
@@ -60,10 +62,10 @@ void LocalConvolutionLayer<Dtype>::init_local_offset(){
 		}
 	}
 	if (this->local_region_num_h_ % 2){
-        offset_h = (this->bottom_height_ - loc_h) / 2;
+        	offset_h = (this->bottom_height_ - loc_h) / 2;
 		for (w = 0; w < this->local_region_num_w_ / 2; ++w){
 			offset_w = w * this->local_region_step_w_;
-            symmetry_offset_w = this->bottom_width_ - (offset_w + loc_w);
+            		symmetry_offset_w = this->bottom_width_ - (offset_w + loc_w);
 
 			idx_to_off_data[idx_to_off.offset(h, w, 0, 0)] = offset_h;
 			idx_to_off_data[idx_to_off.offset(h, w, 1, 0)] = offset_w;
@@ -73,7 +75,7 @@ void LocalConvolutionLayer<Dtype>::init_local_offset(){
 
 		}
 		if (this->local_region_num_w_ % 2){
-            offset_w = (this->bottom_width_ - loc_w) / 2;
+            		offset_w = (this->bottom_width_ - loc_w) / 2;
 			idx_to_off_data[idx_to_off.offset(h, w, 0, 0)] = offset_h;
 			idx_to_off_data[idx_to_off.offset(h, w, 1, 0)] = offset_w;
 		}
@@ -83,19 +85,16 @@ template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_cpu(const Dtype *local_conv_data, Dtype *dst_data)
 {
 	int num_output = this->num_output_;
-    int height_out = this->output_shape_[0], width_out = this->output_shape_[1];
+    	int height_out = this->output_shape_[0], width_out = this->output_shape_[1];
 	int top_height = this->top_height_, top_width = this->top_width_;
 	int local_region_num_w = this->local_region_num_w_;
 	
-    int mStep = top_width;
-    int loc_conv_res_size = this->num_output_ * height_out * width_out;
-	for (int n = 0; n < num_output; ++n)
-	{
+	int mStep = top_width;
+	int loc_conv_res_size = this->num_output_ * height_out * width_out;
+	for (int n = 0; n < num_output; ++n){
 		int num_offset = n * height_out * width_out;
-		for (int h = 0; h < top_height; ++h)
-		{
-			for (int w = 0; w < top_width; ++w)
-			{
+		for (int h = 0; h < top_height; ++h){
+			for (int w = 0; w < top_width; ++w){
 				int dst_offset = h * top_width + w;
 				int dst_idx = dst_offset + n * top_height * top_width;
 				int loc_w = dst_offset % mStep % width_out;
@@ -113,15 +112,16 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_cpu(const Dtype *loca
 }
 
 template <typename Dtype>
-void LocalConvolutionLayer<Dtype>::crop_loc_patch_cpu(const Dtype *src, int src_w, int src_h, int src_c, int crop_width, int crop_height, int w_off, int h_off, Dtype *local_patch_data)
+void LocalConvolutionLayer<Dtype>::crop_loc_patch_cpu(const Dtype *src
+	, int src_w, int src_h, int src_c
+	, int crop_width, int crop_height
+	, int w_off, int h_off, Dtype *local_patch_data)
 {
-	for (int c = 0; c < src_c; ++c)
-	{
-		for (int h = 0; h < crop_height; ++h)
-		{
-			for (int w = 0; w < crop_width; ++w)
-			{
-				local_patch_data[(c * crop_height + h) * crop_width + w] = src[(c * src_h + (h + h_off)) * src_w + w + w_off];
+	for (int c = 0; c < src_c; ++c){
+		for (int h = 0; h < crop_height; ++h){
+			for (int w = 0; w < crop_width; ++w){
+				local_patch_data[(c * crop_height + h) * crop_width + w]
+					= src[(c * src_h + (h + h_off)) * src_w + w + w_off];
 			}
 		}
 	}
@@ -135,28 +135,23 @@ void LocalConvolutionLayer<Dtype>::realign_bottom_diff_cpu(const Dtype *loc_bott
 	const Dtype *src_data = loc_bottom_diff_buffer;
 	Dtype *dst_data = bottom_diff;
 
-    int loc_height = this->conv_input_shape_.cpu_data()[1], loc_width = this->conv_input_shape_.cpu_data()[2];
-    int bottom_width = this->bottom_width_;
-    int src_spatial_dim = loc_height * loc_width;
-    int src_step = this->conv_in_channels_ * src_spatial_dim;
+	int loc_height = this->conv_input_shape_.cpu_data()[1], loc_width = this->conv_input_shape_.cpu_data()[2];
+	int bottom_width = this->bottom_width_;
+	int src_spatial_dim = loc_height * loc_width;
+	int src_step = this->conv_in_channels_ * src_spatial_dim;
 	int dst_channel_step = this->bottom_height_ * this->bottom_width_;
 	int channels = this->channels_;
 	int loc_num_w = this->local_region_num_w_, loc_num_h = this->local_region_num_h_;
-	for (int n = 0; n < channels; n++)
-	{
-		for (int lh = 0; lh < loc_num_h; lh++)
-		{
-			for (int lw = 0; lw < loc_num_w; lw++)
-			{
+	for (int n = 0; n < channels; n++){
+		for (int lh = 0; lh < loc_num_h; lh++){
+			for (int lw = 0; lw < loc_num_w; lw++){
 				int loc_off_h = idx_to_off_data[idx_to_off_blob->offset(lh, lw, 0, 0)];
 				int loc_off_w = idx_to_off_data[idx_to_off_blob->offset(lh, lw, 1, 0)];
 	
 				int loc_num = lh * loc_num_w + lw;
 				int src_offset = loc_num * src_step + n * src_spatial_dim;
-				for (int h = 0; h < loc_height; h++)
-				{
-					for (int w = 0; w < loc_width; w++)
-					{
+				for (int h = 0; h < loc_height; h++){
+					for (int w = 0; w < loc_width; w++){
 						int dst_idx = (loc_off_h + h) * bottom_width + loc_off_w + w;
 						int src_idx = src_offset + h * loc_width + w;
 						dst_data[dst_idx] += src_data[src_idx];
@@ -172,34 +167,34 @@ template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
-					  << "corresponding to (num, channels, height, width)";
+  	<< "corresponding to (num, channels, height, width)";
   LocalConvolutionParameter loc_conv_param = this->layer_param_.local_conv_param();
   CHECK(!loc_conv_param.has_kernel_size() !=
-			  !(loc_conv_param.has_kernel_h() && loc_conv_param.has_kernel_w()))
-			  << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
+	!(loc_conv_param.has_kernel_h() && loc_conv_param.has_kernel_w()))
+	<< "Filter size is kernel_size OR kernel_h and kernel_w; not both";
   CHECK(loc_conv_param.has_kernel_size() ||
-			  (loc_conv_param.has_kernel_h() && loc_conv_param.has_kernel_w()))
-			  << "For non-square filters both kernel_h and kernel_w are required.";
+	(loc_conv_param.has_kernel_h() && loc_conv_param.has_kernel_w()))
+	<< "For non-square filters both kernel_h and kernel_w are required.";
   CHECK((!loc_conv_param.has_pad() && loc_conv_param.has_pad_h()
-			  && loc_conv_param.has_pad_w())
-			  || (!loc_conv_param.has_pad_h() && !loc_conv_param.has_pad_w()))
-			  << "pad is pad OR pad_h and pad_w are required.";
+	&& loc_conv_param.has_pad_w())
+	|| (!loc_conv_param.has_pad_h() && !loc_conv_param.has_pad_w()))
+	<< "pad is pad OR pad_h and pad_w are required.";
   CHECK((!loc_conv_param.has_stride() && loc_conv_param.has_stride_h()
-			  && loc_conv_param.has_stride_w())
-			  || (!loc_conv_param.has_stride_h() && !loc_conv_param.has_stride_w()))
-			  << "Stride is stride OR stride_h and stride_w are required.";
+	&& loc_conv_param.has_stride_w())
+	|| (!loc_conv_param.has_stride_h() && !loc_conv_param.has_stride_w()))
+	<< "Stride is stride OR stride_h and stride_w are required.";
   CHECK((!loc_conv_param.has_local_region_number()
-			  && loc_conv_param.has_local_region_number_w()&& loc_conv_param.has_local_region_number_h())
-			  || (!loc_conv_param.has_local_region_number_h()&& !loc_conv_param.has_local_region_number_w()))
-			  << "has_local_region_number is local number OR has_local_region_number_h and has_local_region_number_w are required.";
+	&& loc_conv_param.has_local_region_number_w()&& loc_conv_param.has_local_region_number_h())
+	|| (!loc_conv_param.has_local_region_number_h()&& !loc_conv_param.has_local_region_number_w()))
+	<< "has_local_region_number is local number OR has_local_region_number_h and has_local_region_number_w are required.";
   CHECK((!loc_conv_param.has_local_region_ratio()
-			  && loc_conv_param.has_local_region_ratio_w() && loc_conv_param.has_local_region_ratio_h())
-			  || (!loc_conv_param.has_local_region_ratio_w() && !loc_conv_param.has_local_region_ratio_h()))
-			  << "has_local_region_ratio is local number OR has_local_region_ratio_h and has_local_region_ratio_w are required.";
+	&& loc_conv_param.has_local_region_ratio_w() && loc_conv_param.has_local_region_ratio_h())
+	|| (!loc_conv_param.has_local_region_ratio_w() && !loc_conv_param.has_local_region_ratio_h()))
+	<< "has_local_region_ratio is local number OR has_local_region_ratio_h and has_local_region_ratio_w are required.";
   CHECK((!loc_conv_param.has_local_region_step()
-			  && loc_conv_param.has_local_region_step_w() && loc_conv_param.has_local_region_step_h())
-			  || (!loc_conv_param.has_local_region_step_w() && !loc_conv_param.has_local_region_step_h()))
-			  << "has_local_region_step is local_region_step OR has_local_region_step_w and has_local_region_step_h are required.";
+	&& loc_conv_param.has_local_region_step_w() && loc_conv_param.has_local_region_step_h())
+	|| (!loc_conv_param.has_local_region_step_w() && !loc_conv_param.has_local_region_step_h()))
+	<< "has_local_region_step is local_region_step OR has_local_region_step_w and has_local_region_step_h are required.";
 
   // Configure the local region number, size and step.
   if (loc_conv_param.has_local_region_number()){
@@ -299,23 +294,23 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
 	  LOG(INFO) << "Skipping parameter initialization";
   }
   else {
-	  if (this->bias_term_) {
-		  this->blobs_.resize(2);
-	  }
-	  // Initialize and fill the weights:
-	  // output channels x input channels per-group x kernel height x kernel width
-	  this->blobs_[0].reset(new Blob<Dtype>(this->L_, this->conv_out_channels_ * this->conv_in_channels_ / this->group_
-							, kernel_shape_data[0], kernel_shape_data[0]));
-	  shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
-		  loc_conv_param.weight_filler()));
-	  weight_filler->Fill(this->blobs_[0].get());
-	  // If necessary, initialize and fill the biases.
-	  if (this->bias_term_) {
-		  this->blobs_[1].reset(new Blob<Dtype>(this->L_, this->num_output_, 1, 1));
-		  shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
-			  loc_conv_param.bias_filler()));
-		  bias_filler->Fill(this->blobs_[1].get());
-		}
+	if (this->bias_term_) {
+		this->blobs_.resize(2);
+	}
+	// Initialize and fill the weights:
+	// output channels x input channels per-group x kernel height x kernel width
+	this->blobs_[0].reset(new Blob<Dtype>(this->L_, this->conv_out_channels_ * this->conv_in_channels_ / this->group_
+		, kernel_shape_data[0], kernel_shape_data[0]));
+	shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+		loc_conv_param.weight_filler()));
+	weight_filler->Fill(this->blobs_[0].get());
+	// If necessary, initialize and fill the biases.
+	if (this->bias_term_) {
+		this->blobs_[1].reset(new Blob<Dtype>(this->L_, this->num_output_, 1, 1));
+		shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
+			loc_conv_param.bias_filler()));
+		bias_filler->Fill(this->blobs_[1].get());
+	}
   }
 
   this->loc_idx_to_offset_.Reshape(this->local_region_num_h_, this->local_region_num_w_, 2, 1);
@@ -336,13 +331,13 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   // TODO: generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
-	  CHECK_EQ(this->num_, bottom[bottom_id]->num()) << "Inputs must have same num.";
-	  CHECK_EQ(this->channels_, bottom[bottom_id]->channels())
-		  << "Inputs must have same channels.";
-	  CHECK_EQ(this->bottom_height_, bottom[0]->height())
-		  << "Inputs must have same height.";
-      CHECK_EQ(this->bottom_width_, bottom[0]->width())
-		  << "Inputs must have same width.";
+	CHECK_EQ(this->num_, bottom[bottom_id]->num()) << "Inputs must have same num.";
+	CHECK_EQ(this->channels_, bottom[bottom_id]->channels())
+		<< "Inputs must have same channels.";
+	CHECK_EQ(this->bottom_height_, bottom[0]->height())
+		<< "Inputs must have same height.";
+	CHECK_EQ(this->bottom_width_, bottom[0]->width())
+		<< "Inputs must have same width.";
   }
   //local region height and width
   vector<int> conv_input_dim_blob_shape(1, this->num_spatial_axes_ + 1);
@@ -365,7 +360,8 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   this->conv_out_spatial_dim_ = this->output_shape_[0] * this->output_shape_[1];
  
-  this->kernel_dim_ = this->conv_in_channels_ * this->kernel_shape_.cpu_data()[0] * this->kernel_shape_.cpu_data()[1] / this->group_;
+  this->kernel_dim_ = this->conv_in_channels_ * this->kernel_shape_.cpu_data()[0]
+  	* this->kernel_shape_.cpu_data()[1] / this->group_;
   this->weight_offset_ = this->conv_out_channels_ * this->kernel_dim_ / this->group_;
   this->col_offset_ = this->kernel_dim_ * this->conv_out_spatial_dim_;
   this->output_offset_ = this->conv_out_channels_ * this->conv_out_spatial_dim_ / this->group_;
@@ -413,38 +409,38 @@ void LocalConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& botto
 
   for (int i = 0; i < bottom.size(); i++)
   {
-	  const Dtype* bottom_data = bottom[i]->cpu_data();
-	  int bottom_w = bottom[i]->width();
-	  int bottom_h = bottom[i]->height();
-	  int bottom_c = bottom[i]->channels();
-	  Dtype* top_data = top[i]->mutable_cpu_data();
+	const Dtype* bottom_data = bottom[i]->cpu_data();
+	int bottom_w = bottom[i]->width();
+	int bottom_h = bottom[i]->height();
+	int bottom_c = bottom[i]->channels();
+	Dtype* top_data = top[i]->mutable_cpu_data();
 
-	  for (int n = 0; n < this->num_; n++) {
-		  const Dtype *single_bottom_data = bottom_data + bottom[i]->offset(n);
-		  for (int lh = 0; lh < local_region_num_h_; lh++){
-			  for (int lw = 0; lw < local_region_num_w_; lw++){
-				  int loc_num = lh * local_region_num_w_ + lw;
-				  const Dtype* loc_weight = weight + this->blobs_[0]->offset(loc_num);
-				  Dtype *loc_bottom = loc_bottom_data + loc_bottom_buffer_.offset(loc_num);
-				  Dtype *loc_top = loc_top_data + loc_top_buffer_.offset(loc_num);
-				  crop_loc_patch_cpu(single_bottom_data
-									, bottom_w
-									, bottom_h
-									, bottom_c
-									, this->conv_input_shape_.cpu_data()[2]
-									, this->conv_input_shape_.cpu_data()[1]
-									, idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)]
-									, idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)]
-									, loc_bottom);
-				  this->forward_cpu_gemm(loc_bottom, loc_weight, loc_top, false);
-				  if (this->bias_term_) {
-					  const Dtype* bias = this->blobs_[1]->cpu_data() + this->blobs_[1]->offset(loc_num);
-					  this->forward_cpu_bias(loc_top, bias);
-				  }
+	for (int n = 0; n < this->num_; n++) {
+	  const Dtype *single_bottom_data = bottom_data + bottom[i]->offset(n);
+	  for (int lh = 0; lh < local_region_num_h_; lh++){
+		  for (int lw = 0; lw < local_region_num_w_; lw++){
+			  int loc_num = lh * local_region_num_w_ + lw;
+			  const Dtype* loc_weight = weight + this->blobs_[0]->offset(loc_num);
+			  Dtype *loc_bottom = loc_bottom_data + loc_bottom_buffer_.offset(loc_num);
+			  Dtype *loc_top = loc_top_data + loc_top_buffer_.offset(loc_num);
+			  crop_loc_patch_cpu(single_bottom_data
+				, bottom_w
+				, bottom_h
+				, bottom_c
+				, this->conv_input_shape_.cpu_data()[2]
+				, this->conv_input_shape_.cpu_data()[1]
+				, idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)]
+				, idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)]
+				, loc_bottom);
+			  this->forward_cpu_gemm(loc_bottom, loc_weight, loc_top, false);
+			  if (this->bias_term_) {
+				  const Dtype* bias = this->blobs_[1]->cpu_data() + this->blobs_[1]->offset(loc_num);
+				  this->forward_cpu_bias(loc_top, bias);
 			  }
 		  }
-		  realign_loc_conv_result_cpu(loc_top_data, top_data + top[i]->offset(n));
 	  }
+	  realign_loc_conv_result_cpu(loc_top_data, top_data + top[i]->offset(n));
+	}
   }
 }
 
@@ -461,7 +457,7 @@ void LocalConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   if (this->bias_term_ && this->param_propagate_down_[1]) {
 	  caffe_set(this->blobs_[1]->count(), Dtype(0)
-					, this->blobs_[1]->mutable_cpu_diff());
+		, this->blobs_[1]->mutable_cpu_diff());
   }
   const Blob<int> *idx_to_off = &this->loc_idx_to_offset_;
   const int *idx_to_off_data = idx_to_off->cpu_data();
@@ -473,73 +469,70 @@ void LocalConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   for (int i = 0; i < top.size(); ++i)
   {
-	  const Dtype* top_diff = top[i]->cpu_diff();
-	  const Dtype* bottom_data = bottom[i]->cpu_data();
-	  Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+	const Dtype* top_diff = top[i]->cpu_diff();
+	const Dtype* bottom_data = bottom[i]->cpu_data();
+	Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
 
-	  if (propagate_down[i]){
-		  caffe_set(bottom[i]->count(), Dtype(0), bottom_diff);
-	  }
+	if (propagate_down[i]){
+		caffe_set(bottom[i]->count(), Dtype(0), bottom_diff);
+	}
 
-	  int top_w = top[i]->width();
-	  int top_h = top[i]->height();
-	  int top_c = top[i]->channels();
-	  int bottom_w = bottom[i]->width();
-	  int bottom_h = bottom[i]->height();
-	  int bottom_c = bottom[i]->channels();
-	  for (int n = 0; n < top[i]->num(); n++)
-	  {
-		  const Dtype *single_top_diff = top_diff + top[i]->offset(n);
-		  const Dtype *single_bottom_data = bottom_data + bottom[i]->offset(n);
-		  Dtype *single_bottom_diff = bottom_diff + bottom[i]->offset(n);
-		  for (int lh = 0; lh < local_region_num_h_; lh++)
-		  {
-			  for (int lw = 0; lw < local_region_num_w_; lw++)
-			  {
-				  int loc_num = lh * local_region_num_w_ + lw;
-				  Dtype *loc_top_diff = loc_top_diff_buffer + loc_top_buffer_.offset(loc_num);
-				  Dtype *loc_bias_diff = bias_diff + this->blobs_[1]->offset(loc_num);
-				  Dtype *loc_bottom_data = loc_bottom_data_buffer + loc_bottom_buffer_.offset(loc_num);
-				  Dtype *loc_bottom_diff = loc_bottom_diff_buffer + loc_bottom_buffer_.offset(loc_num);
-				  Dtype *loc_weight_diff = weight_diff + this->blobs_[0]->offset(loc_num);
-				  const Dtype *loc_weight = weight + this->blobs_[0]->offset(loc_num);
-				  crop_loc_patch_cpu(single_top_diff, top_w, top_h, top_c
-                    , this->output_shape_[1]
-                    , this->output_shape_[0]
-                    , lw * this->output_shape_[1]
-                    , lh * this->output_shape_[0]
-                    , loc_top_diff);
+	int top_w = top[i]->width();
+	int top_h = top[i]->height();
+	int top_c = top[i]->channels();
+	int bottom_w = bottom[i]->width();
+	int bottom_h = bottom[i]->height();
+	int bottom_c = bottom[i]->channels();
+	for (int n = 0; n < top[i]->num(); n++){
+		const Dtype *single_top_diff = top_diff + top[i]->offset(n);
+		const Dtype *single_bottom_data = bottom_data + bottom[i]->offset(n);
+		Dtype *single_bottom_diff = bottom_diff + bottom[i]->offset(n);
+		for (int lh = 0; lh < local_region_num_h_; lh++){
+			for (int lw = 0; lw < local_region_num_w_; lw++){
+				int loc_num = lh * local_region_num_w_ + lw;
+				Dtype *loc_top_diff = loc_top_diff_buffer + loc_top_buffer_.offset(loc_num);
+				Dtype *loc_bias_diff = bias_diff + this->blobs_[1]->offset(loc_num);
+				Dtype *loc_bottom_data = loc_bottom_data_buffer + loc_bottom_buffer_.offset(loc_num);
+				Dtype *loc_bottom_diff = loc_bottom_diff_buffer + loc_bottom_buffer_.offset(loc_num);
+				Dtype *loc_weight_diff = weight_diff + this->blobs_[0]->offset(loc_num);
+				const Dtype *loc_weight = weight + this->blobs_[0]->offset(loc_num);
+				crop_loc_patch_cpu(single_top_diff, top_w, top_h, top_c
+					, this->output_shape_[1]
+					, this->output_shape_[0]
+					, lw * this->output_shape_[1]
+					, lh * this->output_shape_[0]
+					, loc_top_diff);
+	
+				// Bias gradient, if necessary.
+				if (this->bias_term_ && this->param_propagate_down_[1]) {
+				  this->backward_cpu_bias(loc_bias_diff, loc_top_diff);
+				}
+	
+				if (this->param_propagate_down_[0] || propagate_down[i]) {
+					// gradient w.r.t. weight. Note that we will accumulate diffs for n = [0, num - 1]
+					if (this->param_propagate_down_[0]) {
+						crop_loc_patch_cpu(single_bottom_data
+							, bottom_w
+							, bottom_h
+							, bottom_c
+							, this->conv_input_shape_.cpu_data()[2]
+							, this->conv_input_shape_.cpu_data()[1]
+							, idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)]
+							, idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)]
+							, loc_bottom_data);
+						this->weight_cpu_gemm(loc_bottom_data, loc_top_diff, loc_weight_diff);
+					}
+					//gradient w.r.t. bottom data, if necessary.
+					if (propagate_down[i]) {
+						this->backward_cpu_gemm(loc_top_diff, loc_weight, loc_bottom_diff);
+					}
+				}
+			}//for (int lw = 0; lw < local_region_num_w_; lw++)   
+		}//for (int lh = 0; lh< local_region_num_h_; lh++) 
 
-				  // Bias gradient, if necessary.
-				  if (this->bias_term_ && this->param_propagate_down_[1]) {
-					  this->backward_cpu_bias(loc_bias_diff, loc_top_diff);
-				  }
-
-				  if (this->param_propagate_down_[0] || propagate_down[i]) {
-					  // gradient w.r.t. weight. Note that we will accumulate diffs for n = [0, num - 1]
-					  if (this->param_propagate_down_[0]) {
-						  crop_loc_patch_cpu(single_bottom_data
-														  , bottom_w
-														  , bottom_h
-														  , bottom_c
-                                                          , this->conv_input_shape_.cpu_data()[2]
-                                                          , this->conv_input_shape_.cpu_data()[1]
-														  , idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)]
-														  , idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)]
-														  , loc_bottom_data);
-						  this->weight_cpu_gemm(loc_bottom_data, loc_top_diff, loc_weight_diff);
-					  }
-					  //gradient w.r.t. bottom data, if necessary.
-					  if (propagate_down[i]) {
-						  this->backward_cpu_gemm(loc_top_diff, loc_weight, loc_bottom_diff);
-					  }
-				  }
-			  }//for (int lw = 0; lw < local_region_num_w_; lw++)   
-		  }//for (int lh = 0; lh< local_region_num_h_; lh++) 
-
-		  //realign different local regions' gradients to proper bottom location 
-		  realign_bottom_diff_cpu(loc_bottom_diff_buffer, single_bottom_diff);
-	  }//for (int n = 0; n < top[i]->num(); n++)   
+		//realign different local regions' gradients to proper bottom location 
+		realign_bottom_diff_cpu(loc_bottom_diff_buffer, single_bottom_diff);
+	}//for (int n = 0; n < top[i]->num(); n++)   
   }//for (int i = 0; i < top.size(); ++i)
 }
 
