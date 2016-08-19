@@ -233,41 +233,41 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
 	  kernel_shape_data[0] = loc_conv_param.kernel_h();
 	  kernel_shape_data[1] = loc_conv_param.kernel_w();
   }
-	CHECK_GT(kernel_shape_data[0], 0) << "Filter dimensions cannot be zero.";
-	CHECK_GT(kernel_shape_data[1], 0) << "Filter dimensions cannot be zero.";
-	this->pad_.Reshape(spatial_dim_blob_shape);
-	int *pad_data = this->pad_.mutable_cpu_data();
-	if (!loc_conv_param.has_pad_h()) {
-		pad_data[0] = pad_data[1] = loc_conv_param.pad();
-	}
-	else {
-		pad_data[0] = loc_conv_param.pad_h();
-		pad_data[1] = loc_conv_param.pad_w();
-	}
-	this->stride_.Reshape(spatial_dim_blob_shape);
-	int *stride_data = this->stride_.mutable_cpu_data();
-	if (!loc_conv_param.has_stride_h()) {
-		stride_data[0] = stride_data[1] = loc_conv_param.stride();
-	}
-	else {
-		stride_data[0] = loc_conv_param.stride_h();
-		stride_data[1] = loc_conv_param.stride_w();
-	}
-
-	// Setup dilation dimensions (dilation_).
-	this->dilation_.Reshape(spatial_dim_blob_shape);
-	int *dilation_data = this->dilation_.mutable_cpu_data();
-	const int num_dilation_dims = loc_conv_param.dilation_size();
-	CHECK(num_dilation_dims == 0 || num_dilation_dims == 1 ||
-		num_dilation_dims == this->num_spatial_axes_)
-		<< "dilation must be specified once, or once per spatial dimension "
-		<< "(dilation specified " << num_dilation_dims << " times; "
-		<< this->num_spatial_axes_ << " spatial dims).";
-	const int kDefaultDilation = 1;
-	for (int i = 0; i < this->num_spatial_axes_; ++i) {
-		dilation_data[i] = (num_dilation_dims == 0) ? kDefaultDilation :
-			loc_conv_param.dilation((num_dilation_dims == 1) ? 0 : i);
-	}
+  CHECK_GT(kernel_shape_data[0], 0) << "Filter dimensions cannot be zero.";
+  CHECK_GT(kernel_shape_data[1], 0) << "Filter dimensions cannot be zero.";
+  this->pad_.Reshape(spatial_dim_blob_shape);
+  int *pad_data = this->pad_.mutable_cpu_data();
+  if (!loc_conv_param.has_pad_h()) {
+	pad_data[0] = pad_data[1] = loc_conv_param.pad();
+  }
+  else {
+	pad_data[0] = loc_conv_param.pad_h();
+	pad_data[1] = loc_conv_param.pad_w();
+  }
+  this->stride_.Reshape(spatial_dim_blob_shape);
+  int *stride_data = this->stride_.mutable_cpu_data();
+  if (!loc_conv_param.has_stride_h()) {
+	stride_data[0] = stride_data[1] = loc_conv_param.stride();
+  }
+  else {
+	stride_data[0] = loc_conv_param.stride_h();
+	stride_data[1] = loc_conv_param.stride_w();
+  }
+	
+  // Setup dilation dimensions (dilation_).
+  this->dilation_.Reshape(spatial_dim_blob_shape);
+  int *dilation_data = this->dilation_.mutable_cpu_data();
+  const int num_dilation_dims = loc_conv_param.dilation_size();
+  CHECK(num_dilation_dims == 0 || num_dilation_dims == 1 ||
+  num_dilation_dims == this->num_spatial_axes_)
+  	<< "dilation must be specified once, or once per spatial dimension "
+  	<< "(dilation specified " << num_dilation_dims << " times; "
+	<< this->num_spatial_axes_ << " spatial dims).";
+  const int kDefaultDilation = 1;
+  for (int i = 0; i < this->num_spatial_axes_; ++i) {
+	dilation_data[i] = (num_dilation_dims == 0) ? kDefaultDilation :
+		loc_conv_param.dilation((num_dilation_dims == 1) ? 0 : i);
+  }
 
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
@@ -321,9 +321,9 @@ template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(bottom[0]->channels(), this->channels_) << "Input size incompatible with"
-    " weights.";
+	" weights.";
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
-	  << "corresponding to (num, channels, height, width)";
+	<< "corresponding to (num, channels, height, width)";
 
   this->num_ = bottom[0]->num();
   this->bottom_height_ = bottom[0]->height();
@@ -356,7 +356,7 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   this->top_width_ = this->output_shape_[1] * this->local_region_num_w_;
 
   for (int top_id = 0; top_id < top.size(); ++top_id) {
-	  top[top_id]->Reshape(this->num_, this->num_output_, this->top_height_, this->top_width_);
+	top[top_id]->Reshape(this->num_, this->num_output_, this->top_height_, this->top_width_);
   }
   this->conv_out_spatial_dim_ = this->output_shape_[0] * this->output_shape_[1];
  
@@ -505,7 +505,7 @@ void LocalConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 	
 				// Bias gradient, if necessary.
 				if (this->bias_term_ && this->param_propagate_down_[1]) {
-				  this->backward_cpu_bias(loc_bias_diff, loc_top_diff);
+					this->backward_cpu_bias(loc_bias_diff, loc_top_diff);
 				}
 	
 				if (this->param_propagate_down_[0] || propagate_down[i]) {
