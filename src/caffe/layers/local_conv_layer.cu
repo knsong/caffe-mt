@@ -24,32 +24,31 @@ __global__ void crop_loc_patch_kernel(int count, const Dtype *src, int src_w, in
 }
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::crop_loc_patch_gpu(const Dtype *src
-																										, int src_w, int src_h, int src_c
-																										, int crop_width, int crop_height
-																										, int w_off, int h_off
-																										, Dtype *local_patch_data)
+		, int src_w, int src_h, int src_c
+		, int crop_width, int crop_height
+		, int w_off, int h_off
+		, Dtype *local_patch_data)
 {
 	//We are going to launch channels * crop_width * crop_height kernels, each kernel responsible for 
 	//croping one element
 	int num_kernels = src_c * crop_width * crop_height;
-	crop_loc_patch_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels)
-														, CAFFE_CUDA_NUM_THREADS>>>(
-														num_kernels
-														, src
-														, src_w, src_h, src_c
-														, crop_width, crop_height
-														, w_off, h_off
-														, local_patch_data);
+	crop_loc_patch_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+		num_kernels
+		, src
+		, src_w, src_h, src_c
+		, crop_width, crop_height
+		, w_off, h_off
+		, local_patch_data);
 	CUDA_POST_KERNEL_CHECK;
 }
 /*
 template<typename Dtype>
 __global__ void realign_loc_conv_result_kernel(int count, const Dtype *local_conv_data
-																	, int loc_num_h, int loc_num_w
-																	, int loc_out_h, int loc_out_w
-																	, int num_out
-																	, int dst_h, int dst_w
-																	, Dtype *dst_data)
+		, int loc_num_h, int loc_num_w
+		, int loc_out_h, int loc_out_w
+		, int num_out
+		, int dst_h, int dst_w
+		, Dtype *dst_data)
 {
 	int loc_out_spatial_dim = loc_out_h * loc_out_w;
 	int loc_num = loc_num_h * loc_num_w;
@@ -73,11 +72,11 @@ __global__ void realign_loc_conv_result_kernel(int count, const Dtype *local_con
 */
 template<typename Dtype>
 __global__ void realign_loc_conv_result_kernel2(int count, const Dtype *local_conv_data
-																							, int loc_num_h, int loc_num_w
-																							, int loc_out_h, int loc_out_w
-																							, int num_out
-																							, int dst_h, int dst_w
-																							, Dtype *dst_data)
+		, int loc_num_h, int loc_num_w
+		, int loc_out_h, int loc_out_w
+		, int num_out
+		, int dst_h, int dst_w
+		, Dtype *dst_data)
 {
 	int loc_spatial_dim = loc_out_h * loc_out_w;
 	int dst_spatial_dim = dst_h * dst_w;
@@ -105,23 +104,23 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_gpu(const Dtype *loca
   //int num_kernels = this->num_output_ * this->output_shape_[0] * this->output_shape_[1]; //for realign_loc_conv_result_kernel()
   int num_kernels = this->num_output_ * this->output_shape_[0] * this->output_shape_[1] * this->L_; //To get bigger size of Block
   realign_loc_conv_result_kernel2<Dtype><<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS >>>(
-																  num_kernels, local_conv_data
-																  , this->local_region_num_h_ , this->local_region_num_w_
-                                  , this->output_shape_[0], this->output_shape_[1]
-																  , this->num_output_
-																  , this->top_height_, this->top_width_
-																  , dst_data);
+	num_kernels, local_conv_data
+	, this->local_region_num_h_ , this->local_region_num_w_
+	, this->output_shape_[0], this->output_shape_[1]
+	, this->num_output_
+	, this->top_height_, this->top_width_
+	, dst_data);
   CUDA_POST_KERNEL_CHECK;
 }
 
 template<typename Dtype>
 __global__ void realign_bottoom_diff_kernel(int count, const Dtype *loc_bottom_diff
-																					, int loc_region_h, int loc_region_w
-																					, int loc_num_h, int loc_num_w
-																					, int channels
-																					, int dst_height, int dst_width
-																					, const int *loc_idx_to_off_data
-																					, Dtype *dst_data)
+	, int loc_region_h, int loc_region_w
+	, int loc_num_h, int loc_num_w
+	, int channels
+	, int dst_height, int dst_width
+	, const int *loc_idx_to_off_data
+	, Dtype *dst_data)
 {
 	int loc_spatial_dim = loc_region_h * loc_region_w;
 	int loc_num = loc_num_h * loc_num_w;
@@ -142,7 +141,7 @@ __global__ void realign_bottoom_diff_kernel(int count, const Dtype *loc_bottom_d
 			int src_idx = loc_offset + i * loc_step;
 			int loc_idx_to_off_index = (loc_idx_h * loc_num_w + loc_idx_w) * 2;
 			int dst_idx = dst_c_offset + (loc_idx_to_off_data[loc_idx_to_off_index] + loc_h) * dst_width
-							+ loc_idx_to_off_data[loc_idx_to_off_index + 1] + loc_w;
+				+ loc_idx_to_off_data[loc_idx_to_off_index + 1] + loc_w;
 			
 			dst_data[dst_idx] += loc_bottom_diff[src_idx];
 		}
@@ -159,14 +158,14 @@ void LocalConvolutionLayer<Dtype>::realign_bottom_diff_gpu(const Dtype *loc_bott
   int num_kernels = conv_input_c * conv_input_h * conv_input_w;
 
   realign_bottoom_diff_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS >>>(
-															  num_kernels
-															  , loc_bottom_diff_buffer
-                                , conv_input_h, conv_input_w
-															  , this->local_region_num_h_, this->local_region_num_w_
-                                , conv_input_c
-															  , this->bottom_height_, this->bottom_width_
-															  , this->loc_idx_to_offset_.gpu_data()
-															  , bottom_diff);
+	num_kernels
+	, loc_bottom_diff_buffer
+	, conv_input_h, conv_input_w
+	, this->local_region_num_h_, this->local_region_num_w_
+	, conv_input_c
+	, this->bottom_height_, this->bottom_width_
+	, this->loc_idx_to_offset_.gpu_data()
+	, bottom_diff);
 
   CUDA_POST_KERNEL_CHECK;
 }
@@ -182,8 +181,8 @@ void LocalConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& botto
 	const Blob<int> *idx_to_off = &this->loc_idx_to_offset_;
 	const int *idx_to_off_data = idx_to_off->cpu_data();
 	
-    int loc_h = this->conv_input_shape_.cpu_data()[1];
-    int loc_w = this->conv_input_shape_.cpu_data()[2];
+	int loc_h = this->conv_input_shape_.cpu_data()[1];
+	int loc_w = this->conv_input_shape_.cpu_data()[2];
 	for (int i = 0; i < bottom.size(); i++)
 	{
 		const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -201,14 +200,14 @@ void LocalConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& botto
 					Dtype *loc_bottom = loc_bottom_data + loc_bottom_buffer_.offset(loc_num);
 					Dtype *loc_top = loc_top_data + loc_top_buffer_.offset(loc_num);
 					crop_loc_patch_gpu(single_bottom_data
-									  , bottom_w
-									  , bottom_h
-									  , bottom_c
-                    , loc_w
-                    , loc_h
-									  , idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)]
-									  , idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)]
-									  , loc_bottom);
+						, bottom_w
+						, bottom_h
+						, bottom_c
+						, loc_w
+						, loc_h
+						, idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)]
+						, idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)]
+						, loc_bottom);
 					this->forward_gpu_gemm(loc_bottom, loc_weight, loc_top);
 					if (this->bias_term_) {
 						const Dtype* bias = this->blobs_[1]->gpu_data() + this->blobs_[1]->offset(loc_num);
@@ -262,10 +261,10 @@ void LocalConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 		int bottom_w = bottom[i]->width();
 		int bottom_h = bottom[i]->height();
 		int bottom_c = bottom[i]->channels();
-    int conv_out_h = this->output_shape_[0];
-    int conv_out_w = this->output_shape_[1];
-    int conv_in_h = this->conv_input_shape_.cpu_data()[1];
-    int conv_in_w = this->conv_input_shape_.cpu_data()[2];
+		int conv_out_h = this->output_shape_[0];
+		int conv_out_w = this->output_shape_[1];
+		int conv_in_h = this->conv_input_shape_.cpu_data()[1];
+		int conv_in_w = this->conv_input_shape_.cpu_data()[2];
 		for (int n = 0; n < top[i]->num(); n++)
 		{
 			const Dtype *single_top_diff = top_diff + top[i]->offset(n);
@@ -284,11 +283,11 @@ void LocalConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 					const Dtype *loc_weight = weight + this->blobs_[0]->offset(loc_num);
 					
 					crop_loc_patch_gpu(single_top_diff, top_w, top_h, top_c
-                          , conv_out_w
-                          , conv_out_h
-                          , lw * conv_out_w
-                          , lh * conv_out_h
-									  			, loc_top_diff);
+						, conv_out_w
+						, conv_out_h
+						, lw * conv_out_w
+						, lh * conv_out_h
+						, loc_top_diff);
 					
 					// Bias gradient, if necessary.
 					if (this->bias_term_ && this->param_propagate_down_[1]) {
@@ -299,14 +298,14 @@ void LocalConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 						// gradient w.r.t. weight. Note that we will accumulate diffs for n = [0, num - 1]
 						if (this->param_propagate_down_[0]) {
 							crop_loc_patch_gpu(single_bottom_data
-														, bottom_w
-														, bottom_h
-														, bottom_c
-                            , conv_in_w
-                            , conv_in_h
-														, idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)]
-														, idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)]
-														, loc_bottom_data);
+								, bottom_w
+								, bottom_h
+								, bottom_c
+								, conv_in_w
+								, conv_in_h
+								, idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)]
+								, idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)]
+								, loc_bottom_data);
 							this->weight_gpu_gemm(loc_bottom_data, loc_top_diff, loc_weight_diff);
 						}
 						//gradient w.r.t. bottom data, if necessary.
