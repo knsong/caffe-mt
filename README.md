@@ -1,3 +1,16 @@
+
+
+#Hightlights here:
+
+- 1. More manners of Batch Normalization compared with [official Caffe](https://github.com/BVLC/caffe);
+- 2. Local Convolution;
+- 3. Dynamic Convolution;
+
+###For details please see [Wiki](https://github.com/knsong/caffe-mt/wiki).
+
+
+
+
 # Caffe
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
