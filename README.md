@@ -2,7 +2,7 @@
 
 #Hightlights of caffe-mt:
 
-- 1. More manners of Batch Normalization compared with the [official Caffe](https://github.com/BVLC/caffe);
+- 1. More ways of performing Batch Normalization compared with the [official Caffe](https://github.com/BVLC/caffe);
 - 2. Local Convolution;
 - 3. Dynamic Convolution;
 
