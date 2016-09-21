@@ -33,6 +33,21 @@
 
 namespace caffe {
 
+// Get bn layer according to type.
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetBNLayer(const LayerParameter& param) {
+  BNParameter_Type BN_type = param.bn_param().bn_type();
+  if (BN_type == BNParameter_Type_CHANNEL_WISE) {
+    return shared_ptr<Layer<Dtype> >(new ChannlWiseBNLayer<Dtype>(param));
+  } else if (BN_type == BNParameter_Type_ELEMENT_WISE) {
+    return shared_ptr<Layer<Dtype> >(new EltWiseBNLayer<Dtype>(param));
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown type.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(BN, GetBNLayer);
+
 // Get convolution layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(
