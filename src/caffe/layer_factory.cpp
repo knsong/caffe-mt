@@ -15,6 +15,8 @@
 #include "caffe/layers/softmax_layer.hpp"
 #include "caffe/layers/tanh_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/layers/channelwise_bn_layer.hpp"
+#include "caffe/layers/elementwise_bn_layer.hpp"
 
 #ifdef USE_CUDNN
 #include "caffe/layers/cudnn_conv_layer.hpp"

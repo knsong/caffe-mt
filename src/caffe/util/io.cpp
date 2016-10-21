@@ -140,6 +140,55 @@ bool ReadImageToDatum(const string& filename, const int label,
     return false;
   }
 }
+bool ReadImageToDatum(const string& filename, const std::vector<float> &label,
+	 const int height, const int width, const bool is_color, Datum* datum) {
+  cv::Mat cv_img;
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+	CV_LOAD_IMAGE_GRAYSCALE);
+
+  cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
+  if (!cv_img_origin.data) {
+	LOG(ERROR) << "Could not open or find file " << filename;
+	return false;
+  }
+  if (height > 0 && width > 0) {
+	cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else {
+	cv_img = cv_img_origin;
+  }
+
+  int num_channels = (is_color ? 3 : 1);
+  datum->set_channels(num_channels);
+  datum->set_height(cv_img.rows);
+  datum->set_width(cv_img.cols);
+  //datum->set_label(label);
+
+  datum->clear_float_data();
+  for (int i = 0; i < label.size(); i++){
+	datum->add_float_data(label[i]);
+  }
+  
+  datum->clear_data();
+  string* datum_string = datum->mutable_data();
+  if (is_color) {
+	for (int c = 0; c < num_channels; ++c) {
+	  for (int h = 0; h < cv_img.rows; ++h) {
+		for (int w = 0; w < cv_img.cols; ++w) {
+		  datum_string->push_back(
+			static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+		}
+	  }
+	}
+  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
+	for (int h = 0; h < cv_img.rows; ++h) {
+	  for (int w = 0; w < cv_img.cols; ++w) {
+		datum_string->push_back(
+		  static_cast<char>(cv_img.at<uchar>(h, w)));
+		}
+	  }
+  }
+  return true;
+}
 #endif  // USE_OPENCV
 
 bool ReadFileToDatum(const string& filename, const int label,
