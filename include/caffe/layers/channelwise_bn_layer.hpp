@@ -60,4 +60,5 @@ namespace caffe {
     // eps
     Dtype var_eps_;
   };
+}//namespace caffe
 #endif
