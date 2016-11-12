@@ -194,6 +194,10 @@ void MultiTaskDataLayer<Dtype>::InternalThreadEntry() {
 
 }
 
+#ifdef CPU_ONLY
+STUB_GPU_FORWARD(MultiTaskDataLayer, Forward);
+#endif
+
 INSTANTIATE_CLASS(MultiTaskDataLayer);
 REGISTER_LAYER_CLASS(MultiTaskData);
 
