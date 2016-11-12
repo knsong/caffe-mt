@@ -17,10 +17,8 @@ namespace caffe {
 
 // Reference convolution for checking results:
 // accumulate through explicit loops over input, output, and filters.
-	// Reference convolution for checking results:
-	// accumulate through explicit loops over input, output, and filters.
 template <typename Dtype>
-void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
+void caffe_conv_ref(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 	const vector<shared_ptr<Blob<Dtype> > >& weights,
 	Blob<Dtype>* out) {
 	// Kernel size, stride, and pad
@@ -324,18 +322,18 @@ void caffe_loc_conv(const Blob<Dtype>* in, LocalConvolutionParameter* loc_conv_p
 					, (idx_to_off_data + idx_to_off.offset(h, w))[1]
 					, (idx_to_off_data + idx_to_off.offset(h, w))[0], loc_in_data);
 
-				caffe_conv(&loc_in, &conv_param, loc_weights, loc_out_blob);
+				caffe_conv_ref(&loc_in, &conv_param, loc_weights, loc_out_blob);
 			}
 		}
 		realign_loc_conv_result_cpu(loc_out, loc_num_h, loc_num_w, out_height, out_width, single_out_data);
 	}
 }
 
-template void caffe_conv(const Blob<float>* in,
+template void caffe_conv_ref(const Blob<float>* in,
 	ConvolutionParameter* conv_param,
 	const vector<shared_ptr<Blob<float> > >& weights,
 	Blob<float>* out);
-template void caffe_conv(const Blob<double>* in,
+template void caffe_conv_ref(const Blob<double>* in,
 	ConvolutionParameter* conv_param,
 	const vector<shared_ptr<Blob<double> > >& weights,
 	Blob<double>* out);
