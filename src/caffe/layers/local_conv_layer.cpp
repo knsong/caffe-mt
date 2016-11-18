@@ -300,7 +300,7 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
 	// Initialize and fill the weights:
 	// output channels x input channels per-group x kernel height x kernel width
 	this->blobs_[0].reset(new Blob<Dtype>(this->L_, this->conv_out_channels_ * this->conv_in_channels_ / this->group_
-		, kernel_shape_data[0], kernel_shape_data[0]));
+		, kernel_shape_data[0], kernel_shape_data[1]));
 	shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
 		loc_conv_param.weight_filler()));
 	weight_filler->Fill(this->blobs_[0].get());
