@@ -64,7 +64,7 @@ namespace caffe {
 	C_ = bottom[0]->channels();
 	H_ = bottom[0]->height();
 	W_ = bottom[0]->width();
-	var_eps_ = 1e-14;
+	var_eps_ = 1e-7;
 
 	average_span = this->layer_param_.bn_param().average_span();
 
@@ -170,9 +170,9 @@ namespace caffe {
 		caffe_cpu_gemv<Dtype>(CblasTrans, N_, dim,
 			Dtype(1. / N_), buffer_blob_.cpu_data(),
 			batch_sum_multiplier_.cpu_data(), Dtype(0),
-
 			batch_variance_.mutable_cpu_data());  		//Var(X) = E{[X - E(X)]^2}
 				
+		Dtype bias_correction_factor = N_ > 1 ? Dtype(N_)/(N_-1) : 1;		
 		//initialization for moving average of batch mean and variance
 		if(mean_sequence.size() < average_span)
 		{
@@ -193,7 +193,7 @@ namespace caffe {
 			if(0 != mean_sequence.size())
 			{
 				caffe_scal<Dtype>(dim, Dtype(1. / mean_sequence.size()), mean_test);
-				caffe_scal<Dtype>(dim, Dtype(1. / mean_sequence.size()), variance_test);
+				caffe_scal<Dtype>(dim, Dtype(1. / mean_sequence.size() * bias_correction_factor), variance_test);
 			}
 			else{
 				caffe_set<Dtype>(dim, Dtype(0), mean_test);
@@ -223,7 +223,7 @@ namespace caffe {
 				caffe_add<Dtype>(dim, this->blobs_[3]->cpu_data(), variance_sequence[i]->cpu_data(), variance_test);
 			}
 			caffe_scal<Dtype>(dim, Dtype(1. / average_span), mean_test);
-			caffe_scal<Dtype>(dim, Dtype(1. / average_span), variance_test);
+			caffe_scal<Dtype>(dim, Dtype(1. / average_span * bias_correction_factor), variance_test);
 			/*
 			//Recursive method to calculate average mean and variance, deprecated because of numerical stability
 			caffe_sub(dim, mean_sequence[average_span - 1]->cpu_data(), recursion_mean->cpu_data(), batch_temp1_.mutable_cpu_data());

@@ -78,11 +78,8 @@ namespace caffe {
 			Dtype(1. / N_), buffer_blob_.gpu_data(),
 			batch_sum_multiplier_.gpu_data(), Dtype(0),
 			batch_variance_.mutable_gpu_data());  		//Var(X) = E{[X - E(X)]^2}
-			
-		caffe_gpu_add_scalar<Dtype>(dim, var_eps_,			//add eps
-			batch_variance_.mutable_gpu_data());
 
-
+		Dtype bias_correction_factor = N_ > 1 ? Dtype(N_)/(N_-1) : 1;
 		//initialization for moving average of batch mean and variance
 		if(mean_sequence.size() < average_span)
 		{
@@ -103,7 +100,7 @@ namespace caffe {
 			if(0 != mean_sequence.size())
 			{
 				caffe_gpu_scal<Dtype>(dim, Dtype(1. / mean_sequence.size()), mean_test);
-				caffe_gpu_scal<Dtype>(dim, Dtype(1. / mean_sequence.size()), variance_test);
+				caffe_gpu_scal<Dtype>(dim, Dtype(1. / mean_sequence.size() * bias_correction_factor), variance_test);
 			}
 			else{
 				caffe_gpu_set<Dtype>(dim, Dtype(0), mean_test);
@@ -136,7 +133,7 @@ namespace caffe {
 				caffe_gpu_add<Dtype>(dim, this->blobs_[3]->gpu_data(), variance_sequence[i]->gpu_data(), variance_test);
 			}
 			caffe_gpu_scal<Dtype>(dim, Dtype(1. / average_span), mean_test);
-			caffe_gpu_scal<Dtype>(dim, Dtype(1. / average_span), variance_test);
+			caffe_gpu_scal<Dtype>(dim, Dtype(1. / average_span * bias_correction_factor), variance_test);
 			/*
 			//Recursive method to calculate average mean and variance
 			caffe_gpu_sub<Dtype>(dim, mean_sequence[average_span - 1]->gpu_data(), recursion_mean->gpu_data(), batch_temp1_.mutable_gpu_data());
@@ -149,6 +146,8 @@ namespace caffe {
 		}
 	
 		// normalize variance, namely, Var(x) = sqrt(Var(x) + var_eps)
+		caffe_gpu_add_scalar<Dtype>(dim, var_eps_,			//add eps
+			batch_variance_.mutable_gpu_data());
 		caffe_gpu_powx<Dtype>(dim,
 			batch_variance_.gpu_data(), Dtype(0.5),
 			batch_variance_.mutable_gpu_data());
@@ -184,6 +183,8 @@ namespace caffe {
 	{
 
 		// normalize variance
+		caffe_gpu_add_scalar<Dtype>(dim, var_eps_,			//add eps
+			this->blobs_[3]->mutable_gpu_data());
 		caffe_gpu_powx<Dtype>(dim, this->blobs_[3]->gpu_data(), Dtype(0.5), batch_temp1_.mutable_gpu_data());
 
 		//normalize bottom data: xbar = (x - E(x)) / sqrt(Var(x) + var_eps), y = scale * xbar + shift
