@@ -13,31 +13,27 @@
 namespace caffe {
 
 template <typename Dtype>
-class MultiTaskDataLayer: public BaseDataLayer<Dtype>, public InternalThread{
+class MultiTaskDataLayer: public BasePrefetchingDataLayer<Dtype>{
  public:
      explicit MultiTaskDataLayer(const LayerParameter & param)
-     : BaseDataLayer<Dtype>(param){}
+       : BasePrefetchingDataLayer<Dtype>(param), data_reader_(param), data_augmentor_(param){}
 	 virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
-	 virtual inline int MaxTopBlobs() const { return 100;}
+	 virtual inline int MaxTopBlobs() const { return 100;} //Max number of tasks
 	 virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		 const vector<Blob<Dtype>*>& top);
-	 virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-		 const vector<Blob<Dtype>*>& top);
-	 virtual ~MultiTaskDataLayer();
- protected:
-	 virtual void InternalThreadEntry();
-     	 vector<shared_ptr<Blob<Dtype> > > prefetch_labels_;
-	 int task_num_;
+     virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+       const vector<Blob<Dtype>*>& top);
+     ~MultiTaskDataLayer(){};
 
  private:
-	shared_ptr<db::DB> db_;
-	shared_ptr<db::Cursor> cursor_;
-	bool shuffle_on_init;
-	
-	//still use these three variables which were in old version of class BasePrefetchingDataLayer
-	Blob<Dtype> prefetch_data_;
-  	Blob<Dtype> prefetch_label_;
-  	Blob<Dtype> transformed_data_;
+    //DataAugmentor data_augmentor_;
+
+    virtual void load_batch(Batch<Dtype>* batch);
+    DataReader data_reader_;
+    //information about the tasks: number of tasks, label dimension of each task
+    int task_num_, actual_label_top_num_;
+    std::vector<int> label_dimensions_;
+    int label_count_;
 };
 
 } // namespace caffe
