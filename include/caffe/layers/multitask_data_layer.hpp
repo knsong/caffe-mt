@@ -16,7 +16,7 @@ template <typename Dtype>
 class MultiTaskDataLayer: public BasePrefetchingDataLayer<Dtype>{
  public:
      explicit MultiTaskDataLayer(const LayerParameter & param)
-       : BasePrefetchingDataLayer<Dtype>(param), data_reader_(param), data_augmentor_(param){}
+       : BasePrefetchingDataLayer<Dtype>(param), data_reader_(param)/*, data_augmentor_(param)*/{}
 	 virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 	 virtual inline int MaxTopBlobs() const { return 100;} //Max number of tasks
 	 virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
