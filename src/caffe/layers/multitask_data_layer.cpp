@@ -108,7 +108,7 @@ void MultiTaskDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
-  //bool do_augumentation = this->layer_param_.has_augumentation_param();
+  bool do_augumentation = this->layer_param_.has_augumentation_param();
 
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
@@ -128,6 +128,14 @@ void MultiTaskDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     top_label = batch->label_.mutable_cpu_data();
   }
 
+  Datum augumentation;
+  Datum* target;
+  if (do_augumentation){
+    augumentation.set_width(datum.width());
+    augumentation.set_height(datum.height());
+    augumentation.set_channels(datum.channels());
+  }
+
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a datum
@@ -138,8 +146,17 @@ void MultiTaskDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(datum, &(this->transformed_data_));
-   
+    if (do_augumentation && this->data_augmentor_.Rand(2)){
+      this->data_augmentor_.Augumentation(datum, augumentation);
+    //  LOG(ERROR) << "transformed data shape:" << this->transformed_data_.shape_string();
+      this->data_transformer_->Transform(augumentation, &(this->transformed_data_));
+      target = &augumentation;
+    }
+    else{
+      this->data_transformer_->Transform(datum, &(this->transformed_data_));
+      target = &datum;
+    }
+
     // Copy label.
     if (this->output_labels_) {
       // Store batch_size labels for one task consecutively 
@@ -147,14 +164,14 @@ void MultiTaskDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       int label_offset = 0;
       //copy labels for the first task
       //LOG(ERROR) << "label dimension 0 " << " : " << label_dimensions_[0];
-      caffe_static_cast_copy(label_dimensions_[0], datum.float_data().data(),
+      caffe_static_cast_copy(label_dimensions_[0], target->float_data().data(),
                             top_label + item_id * label_dimensions_[0]);
       //copy labels for the left tasks 
       for (int i = 1; i < actual_label_top_num_; ++i){
       //  LOG(ERROR) << "label dimension " << i << " : " << label_dimensions_[i - 1];
         task_offset += label_dimensions_[i - 1] * batch_size;
         label_offset += label_dimensions_[i - 1];
-        caffe_static_cast_copy(label_dimensions_[i], datum.float_data().data() + label_offset,
+        caffe_static_cast_copy(label_dimensions_[i], target->float_data().data() + label_offset,
                               top_label + task_offset + item_id * label_dimensions_[i]);
       }
     }
