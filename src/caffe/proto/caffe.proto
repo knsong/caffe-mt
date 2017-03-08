@@ -2,6 +2,22 @@ syntax = "proto2";
 
 package caffe;
 
+// Specifies the augumentation parameters
+message AugumentationParameter{
+  //Image augumentation type
+  enum AugumentationType{
+    MOTION_BLUR = 0;
+    GUASSIAN_BLUR = 1;
+  }
+  repeated AugumentationType type = 1;
+  //The direction and radius of motion blur
+  repeated int32 bulr_direction = 2; 
+  repeated float blur_radius = 3;
+  //The mean and std of Gaussian noise
+  repeated float mean = 4;
+  repeated float std = 5;
+}
+
 // Specifies the shape (dimensions) of a Blob.
 message BlobShape {
   repeated int64 dim = 1 [packed = true];
@@ -306,7 +322,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 149 (last added: local_conv_param)
+// LayerParameter next available layer-specific ID: 150 (last added: augumentation_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -360,6 +376,7 @@ message LayerParameter {
   // The default for the engine is set by the ENGINE switch at compile-time.
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
+  optional AugumentationParameter augumentation_param = 149;
   optional BatchNormParameter batch_norm_param = 139;
   optional BiasParameter bias_param = 141;
   optional BNParameter bn_param = 147;
