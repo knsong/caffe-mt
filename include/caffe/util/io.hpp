@@ -100,9 +100,16 @@ bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color,
     const std::string & encoding, Datum* datum);
 
-bool ReadImageToDatum(const string& filename, const std::vector<float> &label,
+
+bool ReadImageToDatum(const string& filename, const std::vector<float>& label,
 	const int height, const int width, const bool is_color, Datum* datum);
-	
+	/*
+inline bool ReadImageToDatum(const string& filename, const std::vector<float>& label,
+    const int height, const int width, const bool is_color, Datum* datum) {
+  return ReadImageToDatum(filename, label, height, width, is_color,
+                          "", datum);
+}
+*/
 inline bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
   return ReadImageToDatum(filename, label, height, width, is_color,

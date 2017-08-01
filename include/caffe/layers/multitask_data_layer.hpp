@@ -30,7 +30,7 @@ class MultiTaskDataLayer: public BasePrefetchingDataLayer<Dtype>{
     DataAugmentor data_augmentor_;
 
     virtual void load_batch(Batch<Dtype>* batch);
-    DataReader data_reader_;
+    DataReader<Datum> data_reader_;
     //information about the tasks: number of tasks, label dimension of each task
     int task_num_, actual_label_top_num_;
     std::vector<int> label_dimensions_;

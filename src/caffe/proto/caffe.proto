@@ -11,7 +11,7 @@ message AugumentationParameter{
   }
   repeated AugumentationType type = 1;
   //The direction and radius of motion blur
-  repeated int32 bulr_direction = 2; 
+  repeated int32 bulr_direction = 2;
   repeated float blur_radius = 3;
   //The mean and std of Gaussian noise
   repeated float mean = 4;
@@ -434,7 +434,7 @@ message BNParameter {
 	CHANNEL_WISE = 0;
 	ELEMENT_WISE = 1;
   }
-  optional Type bn_type = 5 [default = CHANNEL_WISE]; //The manner to perform BN 
+  optional Type bn_type = 5 [default = CHANNEL_WISE]; //The manner to perform BN
 }
 
 //Only for 2D convolution till now
@@ -462,18 +462,18 @@ message LocalConvolutionParameter {
     CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
-  
+
   optional uint32 local_region_number = 16 [default = 1]; 		// If default, it will degrade to normal convlution
-  optional uint32 local_region_number_w = 17 [default = 1]; 	//, otherwise local_region_number * local_region_number local regions will 
+  optional uint32 local_region_number_w = 17 [default = 1]; 	//, otherwise local_region_number * local_region_number local regions will
   optional uint32 local_region_number_h = 18 [default = 1]; 	// be convolved with different convolution kernel banks.
 
   optional float local_region_ratio = 19 [default = 1.0]; 		// range in (0, 1], combined with local region number to determine the local region size
-  optional float local_region_ratio_w = 20 [default = 1.0]; 
-  optional float local_region_ratio_h = 21 [default = 1.0]; 
-  
+  optional float local_region_ratio_w = 20 [default = 1.0];
+  optional float local_region_ratio_h = 21 [default = 1.0];
+
   optional uint32 local_region_step = 22 [default = 1]; 	//step between adjacent input local regions
-  optional uint32 local_region_step_w = 23 [default = 1]; 
-  optional uint32 local_region_step_h = 24 [default = 1]; 	
+  optional uint32 local_region_step_w = 23 [default = 1];
+  optional uint32 local_region_step_h = 24 [default = 1];
 }
 
 // Message that stores parameters used to apply transformation
@@ -702,6 +702,44 @@ message DataParameter {
   }
   // Specify the data source.
   optional string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 4;
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the database.
+  // DEPRECATED. Each solver accesses a different subset of the database.
+  optional uint32 rand_skip = 7 [default = 0];
+  optional DB backend = 8 [default = LEVELDB];
+  // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
+  // simple scaling and subtracting the data mean, if provided. Note that the
+  // mean subtraction is always carried out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // DEPRECATED. See TransformationParameter. Specify if we would like to randomly
+  // crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
+  // data.
+  optional bool mirror = 6 [default = false];
+  // Force the encoded image to have 3 color channels
+  optional bool force_encoded_color = 9 [default = false];
+  // Prefetch queue (Number of batches to prefetch to host memory, increase if
+  // data access bandwidth varies).
+  optional uint32 prefetch = 10 [default = 4];
+  //Mutlti-task number
+  optional uint32 task_num = 11 [default = 1];
+  repeated uint32 label_dimension = 12;
+}
+
+// Accept multiple sources of data
+message MultiSourceDataParameter {
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
+  // Specify the data source.
+  repeated string source = 1;
   // Specify the batch size.
   optional uint32 batch_size = 4;
   // The rand_skip variable is for the data layer to skip a few data points

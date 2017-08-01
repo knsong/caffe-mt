@@ -140,7 +140,7 @@ bool ReadImageToDatum(const string& filename, const int label,
     return false;
   }
 }
-bool ReadImageToDatum(const string& filename, const std::vector<float> &label,
+bool ReadImageToDatum(const string& filename, const std::vector<float>& label,
 	 const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img;
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
@@ -167,7 +167,7 @@ bool ReadImageToDatum(const string& filename, const std::vector<float> &label,
   for (int i = 0; i < label.size(); i++){
 	datum->add_float_data(label[i]);
   }
-  
+
   datum->clear_data();
   string* datum_string = datum->mutable_data();
   if (is_color) {
